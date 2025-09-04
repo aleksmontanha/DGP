@@ -1,0 +1,20 @@
+[Unit]
+Description=Portal DGP Next.js web
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/var/portal-dgp/web
+# Edit User to the service account on your server (e.g., 'portal' or 'www-data')
+User=www-data
+Environment=NODE_ENV=production
+EnvironmentFile=/var/portal-dgp/web/.env.production
+ExecStart=/usr/bin/env bash -lc 'HOST=0.0.0.0 PORT=3000 npm start'
+Restart=always
+RestartSec=5
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=portal-dgp
+
+[Install]
+WantedBy=multi-user.target
