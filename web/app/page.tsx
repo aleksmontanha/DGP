@@ -1,6 +1,33 @@
 'use client';
 import React from 'react';
 
+// Tipos simples para evitar `any`
+interface Instance {
+  id: string;
+  name: string;
+  status: string;
+  vcpu?: number;
+  ramGB?: number;
+}
+
+interface Job {
+  id: string;
+  name: string;
+  status: string;
+  submittedAt: string;
+}
+
+interface Estimation {
+  usdPerHour: number;
+  brlPerHour: number;
+}
+
+interface Spec {
+  vcpu: number;
+  ramGB: number;
+  gpus: number;
+}
+
 const NAV = [
   { key: 'dashboard', label: 'Dashboard' },
   { key: 'instances', label: 'Instâncias' },
@@ -37,7 +64,7 @@ function Pill({ children }: { children: React.ReactNode }) {
   return <span className="px-2 py-0.5 rounded-full text-xs border bg-white">{children}</span>;
 }
 
-function Card({ title, children, right }: any) {
+function Card({ title, children, right }: React.PropsWithChildren<{ title: string; right?: React.ReactNode }>) {
   return (
     <div className="rounded-2xl border bg-white shadow-sm p-4">
       <div className="flex items-center justify-between mb-2">
@@ -60,7 +87,7 @@ function TopStats() {
   );
 }
 
-function Row({ left, right }: any) {
+function Row({ left, right }: { left: React.ReactNode; right?: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between text-sm py-2 border-b last:border-0">
       <div className="flex items-center gap-2">{left}</div>
@@ -70,31 +97,31 @@ function Row({ left, right }: any) {
 }
 
 function InstancesPanel() {
-  const [items, setItems] = React.useState<any[] | null>(null);
+  const [items, setItems] = React.useState<Instance[] | null>(null);
   const [loading, setLoading] = React.useState(false);
   const [form, setForm] = React.useState({ name: '', type: 'CPU.C4.small', vcpu: 4, ramGB: 8, gpus: 0 });
 
   React.useEffect(() => {
     (async () => {
       setLoading(true);
-      const data = await fetchJSON('/instances');
-      setItems(data);
+  const data = (await fetchJSON('/instances')) as Instance[];
+  setItems(data);
       setLoading(false);
     })();
   }, []);
 
   async function createInstance() {
-    const inst = await fetchJSON('/instances', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
-    setItems((prev) => [inst, ...(prev || [])]);
+  const inst = (await fetchJSON('/instances', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })) as Instance;
+  setItems((prev) => [inst, ...(prev || [])]);
   }
 
   async function action(id: string, act: 'start'|'stop'|'delete') {
     if (act === 'delete') {
       await fetchJSON(`/instances/${id}`, { method: 'DELETE' });
-      setItems((prev) => (prev||[]).filter((x:any) => x.id !== id));
+      setItems((prev) => (prev || []).filter((x) => x.id !== id));
     } else {
       await fetchJSON(`/instances/${id}/${act}`, { method: 'POST' });
-      const data = await fetchJSON('/instances');
+      const data = (await fetchJSON('/instances')) as Instance[];
       setItems(data);
     }
   }
@@ -116,7 +143,7 @@ function InstancesPanel() {
         {(items || [
           { id: 'i-001', name: 'gpu-worker-01', status: 'running', vcpu: 16, ramGB: 64 },
           { id: 'i-002', name: 'cpu-worker-02', status: 'stopped', vcpu: 8, ramGB: 16 },
-        ]).map((vm: any) => (
+        ] as Instance[]).map((vm: Instance) => (
           <Row key={vm.id}
             left={<>
               <span className={`w-2 h-2 rounded-full ${vm.status==='running' ? 'bg-green-500' : vm.status==='provisioning' ? 'bg-amber-500' : 'bg-gray-300'}`} />
@@ -140,14 +167,14 @@ function InstancesPanel() {
 }
 
 function JobsPanel() {
-  const [jobs, setJobs] = React.useState<any[] | null>(null);
+  const [jobs, setJobs] = React.useState<Job[] | null>(null);
   const [name, setName] = React.useState('llm-7b');
 
-  React.useEffect(() => { (async () => setJobs(await fetchJSON('/jobs')))(); }, []);
+  React.useEffect(() => { (async () => { const data = (await fetchJSON('/jobs')) as Job[]; setJobs(data); })(); }, []);
 
   async function submitJob() {
-    const j = await fetchJSON('/jobs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
-    setJobs((prev) => [j, ...(prev || [])]);
+  const j = (await fetchJSON('/jobs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) })) as Job;
+  setJobs((prev) => [j, ...(prev || [])]);
   }
 
   return (
@@ -160,7 +187,7 @@ function JobsPanel() {
         {(jobs || [
           { id: 'job-101', name: 'vllm-7b', status: 'queued', submittedAt: new Date().toISOString() },
           { id: 'job-102', name: 'yolo-traffic', status: 'running', submittedAt: new Date().toISOString() },
-        ]).map((j) => (
+        ] as Job[]).map((j: Job) => (
           <Row key={j.id}
             left={<>
               <span className={`w-2 h-2 rounded-full ${j.status==='running' ? 'bg-green-500' : j.status==='done' ? 'bg-gray-500' : 'bg-amber-500'}`} />
@@ -176,12 +203,12 @@ function JobsPanel() {
 }
 
 function BillingPanel() {
-  const [est, setEst] = React.useState<any | null>(null);
-  const [spec, setSpec] = React.useState({ vcpu: 4, ramGB: 8, gpus: 0 });
+  const [est, setEst] = React.useState<Estimation | null>(null);
+  const [spec, setSpec] = React.useState<Spec>({ vcpu: 4, ramGB: 8, gpus: 0 });
 
-  React.useEffect(() => { (async () => setEst(await fetchJSON('/billing/estimate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(spec) })))(); }, []);
+  React.useEffect(() => { (async () => { const e = (await fetchJSON('/billing/estimate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(spec) })) as Estimation; setEst(e); })(); }, [spec]);
   async function recalc() {
-    const e = await fetchJSON('/billing/estimate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(spec) });
+    const e = (await fetchJSON('/billing/estimate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(spec) })) as Estimation;
     setEst(e);
   }
 

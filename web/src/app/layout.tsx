@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Image from 'next/image';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -49,7 +50,7 @@ export default function RootLayout({
               </div>
               <div className="flex items-center gap-4">
                 <span className="text-gray-700 text-sm">Usuário</span>
-                <img src="https://ui-avatars.com/api/?name=User" alt="Avatar" className="w-8 h-8 rounded-full" />
+                <Image src="https://ui-avatars.com/api/?name=User" alt="Avatar" width={32} height={32} className="rounded-full" />
               </div>
             </header>
             {/* Page content */}
