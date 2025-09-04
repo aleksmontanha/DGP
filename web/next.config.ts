@@ -8,4 +8,5 @@ const nextConfig = {
   ],
 };
 
-module.exports = nextConfig;
+// Para Next com TypeScript, exporte como default
+export default nextConfig;
