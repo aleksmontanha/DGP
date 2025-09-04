@@ -56,8 +56,14 @@ function useHashRoute(defaultKey = 'dashboard') {
 
 async function fetchJSON(path: string, init?: RequestInit) {
   const base = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000';
-  const r = await fetch(`${base}${path}`, { cache: 'no-store', ...(init || {}) });
-  return await r.json();
+  try {
+    const r = await fetch(`${base}${path}`, { cache: 'no-store', ...(init || {}) });
+    if (!r.ok) throw new Error(`HTTP ${r.status} ${r.statusText}`);
+    return await r.json();
+  } catch (err) {
+    console.error('fetchJSON error', path, err);
+    throw err;
+  }
 }
 
 function Pill({ children }: { children: React.ReactNode }) {
@@ -120,25 +126,43 @@ function InstancesPanel() {
   React.useEffect(() => {
     (async () => {
       setLoading(true);
-  const data = (await fetchJSON('/instances')) as Instance[];
-  setItems(data);
-      setLoading(false);
+      try {
+        const data = (await fetchJSON('/instances')) as Instance[];
+        setItems(data);
+      } catch (err) {
+        console.error('InstancesPanel load failed', err);
+        setItems([]);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
 
   async function createInstance() {
-  const inst = (await fetchJSON('/instances', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })) as Instance;
-  setItems((prev) => [inst, ...(prev || [])]);
+    try {
+      const inst = (await fetchJSON('/instances', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })) as Instance;
+      setItems((prev) => [inst, ...(prev || [])]);
+    } catch (err) {
+      console.error('createInstance failed', err);
+    }
   }
 
   async function action(id: string, act: 'start'|'stop'|'delete') {
     if (act === 'delete') {
-      await fetchJSON(`/instances/${id}`, { method: 'DELETE' });
-      setItems((prev) => (prev || []).filter((x) => x.id !== id));
+      try {
+        await fetchJSON(`/instances/${id}`, { method: 'DELETE' });
+        setItems((prev) => (prev || []).filter((x) => x.id !== id));
+      } catch (err) {
+        console.error('delete instance failed', err);
+      }
     } else {
-      await fetchJSON(`/instances/${id}/${act}`, { method: 'POST' });
-      const data = (await fetchJSON('/instances')) as Instance[];
-      setItems(data);
+      try {
+        await fetchJSON(`/instances/${id}/${act}`, { method: 'POST' });
+        const data = (await fetchJSON('/instances')) as Instance[];
+        setItems(data);
+      } catch (err) {
+        console.error('instance action failed', err);
+      }
     }
   }
 
@@ -189,8 +213,12 @@ function JobsPanel() {
   React.useEffect(() => { (async () => { const data = (await fetchJSON('/jobs')) as Job[]; setJobs(data); })(); }, []);
 
   async function submitJob() {
-  const j = (await fetchJSON('/jobs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) })) as Job;
-  setJobs((prev) => [j, ...(prev || [])]);
+    try {
+      const j = (await fetchJSON('/jobs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) })) as Job;
+      setJobs((prev) => [j, ...(prev || [])]);
+    } catch (err) {
+      console.error('submitJob failed', err);
+    }
   }
 
   return (
@@ -224,9 +252,23 @@ function BillingPanel() {
 
   React.useEffect(() => { (async () => { const e = (await fetchJSON('/billing/estimate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(spec) })) as Estimation; setEst(e); })(); }, [spec]);
   async function recalc() {
-    const e = (await fetchJSON('/billing/estimate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(spec) })) as Estimation;
-    setEst(e);
+    try {
+      const e = (await fetchJSON('/billing/estimate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(spec) })) as Estimation;
+      setEst(e);
+    } catch (err) {
+      console.error('recalc failed', err);
+      setEst(null);
+    }
   }
+  React.useEffect(() => { (async () => {
+    try {
+      const e = (await fetchJSON('/billing/estimate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(spec) })) as Estimation;
+      setEst(e);
+    } catch (err) {
+      console.error('billing estimate failed', err);
+      setEst(null);
+    }
+  })(); }, [spec]);
 
   return (
     <Card title="Billing (MVP)">
@@ -238,8 +280,8 @@ function BillingPanel() {
       <button onClick={recalc} className="px-3 py-1.5 text-sm border rounded-lg">Recalcular</button>
       <div className="mt-3 text-sm text-gray-700">
         {est ? (<>
-          <div>USD/h: <b>{est.usdPerHour.toFixed(4)}</b></div>
-          <div>BRL/h: <b>{est.brlPerHour.toFixed(2)}</b></div>
+          <div>USD/h: <b>{Number(est.usdPerHour ?? 0).toFixed(4)}</b></div>
+          <div>BRL/h: <b>{Number(est.brlPerHour ?? 0).toFixed(2)}</b></div>
         </>) : <span className="text-xs text-gray-500">Informe os campos e recalcule…</span>}
       </div>
     </Card>
