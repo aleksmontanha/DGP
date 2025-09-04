@@ -55,14 +55,18 @@ function useHashRoute(defaultKey = 'dashboard') {
 }
 
 async function fetchJSON(path: string, init?: RequestInit) {
-  const base = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000';
+  const base = process.env.NEXT_PUBLIC_API_BASE || 'http://192.168.13.120:4000';
   try {
     const r = await fetch(`${base}${path}`, { cache: 'no-store', ...(init || {}) });
-    if (!r.ok) throw new Error(`HTTP ${r.status} ${r.statusText}`);
+    if (!r.ok) {
+      console.error('fetchJSON http error', path, r.status, r.statusText);
+      return null;
+    }
     return await r.json();
   } catch (err) {
+    // network or other error: log and return null so callers can handle gracefully
     console.error('fetchJSON error', path, err);
-    throw err;
+    return null;
   }
 }
 
@@ -210,7 +214,17 @@ function JobsPanel() {
   const [jobs, setJobs] = React.useState<Job[] | null>(null);
   const [name, setName] = React.useState('llm-7b');
 
-  React.useEffect(() => { (async () => { const data = (await fetchJSON('/jobs')) as Job[]; setJobs(data); })(); }, []);
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const data = (await fetchJSON('/jobs')) as Job[] | null;
+        setJobs(data || []);
+      } catch (err) {
+        console.error('JobsPanel load failed', err);
+        setJobs([]);
+      }
+    })();
+  }, []);
 
   async function submitJob() {
     try {
@@ -250,7 +264,17 @@ function BillingPanel() {
   const [est, setEst] = React.useState<Estimation | null>(null);
   const [spec, setSpec] = React.useState<Spec>({ vcpu: 4, ramGB: 8, gpus: 0 });
 
-  React.useEffect(() => { (async () => { const e = (await fetchJSON('/billing/estimate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(spec) })) as Estimation; setEst(e); })(); }, [spec]);
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const e = (await fetchJSON('/billing/estimate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(spec) })) as Estimation | null;
+        setEst(e || null);
+      } catch (err) {
+        console.error('billing estimate failed', err);
+        setEst(null);
+      }
+    })();
+  }, [spec]);
   async function recalc() {
     try {
       const e = (await fetchJSON('/billing/estimate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(spec) })) as Estimation;
@@ -260,15 +284,17 @@ function BillingPanel() {
       setEst(null);
     }
   }
-  React.useEffect(() => { (async () => {
-    try {
-      const e = (await fetchJSON('/billing/estimate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(spec) })) as Estimation;
-      setEst(e);
-    } catch (err) {
-      console.error('billing estimate failed', err);
-      setEst(null);
-    }
-  })(); }, [spec]);
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const e = (await fetchJSON('/billing/estimate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(spec) })) as Estimation | null;
+        setEst(e || null);
+      } catch (err) {
+        console.error('billing estimate failed', err);
+        setEst(null);
+      }
+    })();
+  }, [spec]);
 
   return (
     <Card title="Billing (MVP)">
