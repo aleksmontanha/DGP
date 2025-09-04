@@ -25,36 +25,74 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50`}> 
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-app-bg text-app-fore`}> 
         <div className="flex min-h-screen">
           {/* Sidebar */}
-          <aside className="w-64 bg-gray-900 text-white flex flex-col p-4 shadow-lg">
-            <div className="text-2xl font-bold mb-8 flex items-center gap-2">
-              <svg width="32" height="32" fill="none" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#232F3E"/><text x="16" y="22" textAnchor="middle" fontSize="16" fill="#fff">DGP</text></svg>
-              Portal
+          <aside className="w-64 bg-app-sidebar text-white flex flex-col p-4 shadow-lg">
+            <div className="mb-6 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-app-accent flex items-center justify-center text-sm font-bold">DGP</div>
+              <div>
+                <div className="text-base font-semibold">Portal DGP</div>
+                <div className="text-xs text-app-muted">Console</div>
+              </div>
             </div>
-            <nav className="flex flex-col gap-4">
-              <a href="#" className="hover:bg-gray-800 rounded px-3 py-2">Dashboard</a>
-              <a href="#" className="hover:bg-gray-800 rounded px-3 py-2">Serviços</a>
-              <a href="#" className="hover:bg-gray-800 rounded px-3 py-2">Usuários</a>
-              <a href="#" className="hover:bg-gray-800 rounded px-3 py-2">Configurações</a>
+
+            <nav className="flex-1">
+              <div className="text-xs text-app-muted px-2 mb-2">Navegação</div>
+              <ul className="space-y-1">
+                <li>
+                  <a href="#/dashboard" className="flex items-center gap-3 px-3 py-2 rounded hover:bg-app-sidebar-hover">
+                    <svg className="w-5 h-5 text-app-muted" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h18v4H3V3zM3 10h9v11H3V10zM14 10h7v11h-7V10z"/></svg>
+                    Dashboard
+                  </a>
+                </li>
+                <li>
+                  <a href="#/instances" className="flex items-center gap-3 px-3 py-2 rounded hover:bg-app-sidebar-hover">
+                    <svg className="w-5 h-5 text-app-muted" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 1.567-3 3.5S10.343 15 12 15s3-1.567 3-3.5S13.657 8 12 8z"/></svg>
+                    Instâncias
+                  </a>
+                </li>
+                <li>
+                  <a href="#/jobs" className="flex items-center gap-3 px-3 py-2 rounded hover:bg-app-sidebar-hover">
+                    <svg className="w-5 h-5 text-app-muted" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-6h6v6M9 7h6"/></svg>
+                    Jobs
+                  </a>
+                </li>
+              </ul>
+
+              <div className="mt-6 text-xs text-app-muted px-2">Gerenciamento</div>
+              <ul className="mt-1 space-y-1">
+                <li><a href="#/billing" className="flex items-center gap-3 px-3 py-2 rounded hover:bg-app-sidebar-hover">Faturamento</a></li>
+                <li><a href="#/users" className="flex items-center gap-3 px-3 py-2 rounded hover:bg-app-sidebar-hover">Usuários</a></li>
+                <li><a href="#/settings" className="flex items-center gap-3 px-3 py-2 rounded hover:bg-app-sidebar-hover">Configurações</a></li>
+              </ul>
             </nav>
-            <div className="mt-auto pt-8 text-xs text-gray-400">© 2025 DGP</div>
+
+            <div className="mt-auto pt-6 text-xs text-app-muted">© 2025 DGP</div>
           </aside>
+
           {/* Main content */}
           <div className="flex-1 flex flex-col">
             {/* Header */}
-            <header className="h-16 bg-white border-b flex items-center px-6 justify-between shadow-sm">
+            <header className="h-16 bg-white/80 border-b flex items-center px-6 justify-between shadow-sm sticky top-0 z-20">
               <div className="flex items-center gap-4">
-                <input type="text" placeholder="Buscar..." className="border rounded px-3 py-1 text-sm" />
+                <div className="relative">
+                  <input type="search" placeholder="Buscar recursos, instâncias, jobs..." className="w-72 pl-3 pr-10 py-2 border rounded-full text-sm bg-white/90" />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 text-app-muted text-sm">↵</div>
+                </div>
+                <div className="text-sm text-app-muted">Região: <strong className="ml-1">sa-east-1</strong></div>
               </div>
               <div className="flex items-center gap-4">
-                <span className="text-gray-700 text-sm">Usuário</span>
-                <Image src="https://ui-avatars.com/api/?name=User" alt="Avatar" width={32} height={32} className="rounded-full" />
+                <button className="text-sm px-3 py-1 border rounded bg-app-cta text-white">Criar</button>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-app-muted">Usuário</span>
+                  <Image src="https://ui-avatars.com/api/?name=User" alt="Avatar" width={32} height={32} className="rounded-full" />
+                </div>
               </div>
             </header>
+
             {/* Page content */}
-            <main className="flex-1 p-8">{children}</main>
+            <main className="flex-1 p-8 max-w-7xl w-full mx-auto">{children}</main>
           </div>
         </div>
       </body>
