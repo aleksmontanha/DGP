@@ -79,10 +79,26 @@ function Card({ title, children, right }: React.PropsWithChildren<{ title: strin
 function TopStats() {
   return (
     <div className="grid md:grid-cols-4 gap-4">
-      <div className="rounded-2xl border bg-white p-4"><div className="text-xs text-gray-500">Instâncias</div><div className="text-2xl font-semibold">3</div></div>
-      <div className="rounded-2xl border bg-white p-4"><div className="text-xs text-gray-500">GPUs</div><div className="text-2xl font-semibold">2</div></div>
-      <div className="rounded-2xl border bg-white p-4"><div className="text-xs text-gray-500">Jobs</div><div className="text-2xl font-semibold">5</div></div>
-      <div className="rounded-2xl border bg-white p-4"><div className="text-xs text-gray-500">Custo estimado (R$/h)</div><div className="text-2xl font-semibold">34,20</div></div>
+      <div className="rounded border bg-white p-4 shadow-sm">
+        <div className="text-xs text-gray-500">Instâncias</div>
+        <div className="text-2xl font-semibold">3</div>
+        <div className="text-xs text-app-muted mt-1">Ativas nos últimos 24h</div>
+      </div>
+      <div className="rounded border bg-white p-4 shadow-sm">
+        <div className="text-xs text-gray-500">GPUs</div>
+        <div className="text-2xl font-semibold">2</div>
+        <div className="text-xs text-app-muted mt-1">GPUs disponíveis</div>
+      </div>
+      <div className="rounded border bg-white p-4 shadow-sm">
+        <div className="text-xs text-gray-500">Jobs</div>
+        <div className="text-2xl font-semibold">5</div>
+        <div className="text-xs text-app-muted mt-1">Em fila / execução</div>
+      </div>
+      <div className="rounded border bg-white p-4 shadow-sm">
+        <div className="text-xs text-gray-500">Custo estimado (R$/h)</div>
+        <div className="text-2xl font-semibold">34,20</div>
+        <div className="text-xs text-app-muted mt-1">Estimativa atual</div>
+      </div>
     </div>
   );
 }
@@ -244,11 +260,33 @@ function Breadcrumb({ route }: { route: string }) {
 function DashboardHome() {
   return (
     <div>
-      <TopStats />
-      <div className="grid md:grid-cols-3 gap-4 mt-4">
-        <InstancesPanel />
-        <JobsPanel />
-        <BillingPanel />
+      <div className="mb-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold">Visão geral</h2>
+            <p className="text-sm text-app-muted">Resumo rápido dos seus recursos</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button className="px-3 py-1 rounded text-sm bg-app-accent text-white">Criar recurso</button>
+            <button className="px-3 py-1 rounded border text-sm">Ações</button>
+          </div>
+        </div>
+        <div className="mt-4">
+          <TopStats />
+        </div>
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 space-y-4">
+          <InstancesPanel />
+          <JobsPanel />
+        </div>
+        <div className="space-y-4">
+          <BillingPanel />
+          <Card title="Atividades recentes">
+            <div className="text-sm text-app-muted">Sem atividades recentes</div>
+          </Card>
+        </div>
       </div>
     </div>
   );

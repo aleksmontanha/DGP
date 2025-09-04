@@ -3,11 +3,11 @@
 :root {
   --background: #f6f8fb;
   --foreground: #0f1724;
-  --app-accent: #2563eb; /* blue-600 */
-  --app-sidebar: #0b1220; /* dark navy */
-  --app-sidebar-hover: #0f1724;
-  --app-muted: #94a3b8;
-  --app-cta: #0b72ff;
+  --app-accent: #ff9900; /* AWS orange */
+  --app-sidebar: #111827; /* dark gray */
+  --app-sidebar-hover: #0b1220;
+  --app-muted: #6b7280;
+  --app-cta: #ff9900;
   --app-bg: #f6f8fb;
 }
 
