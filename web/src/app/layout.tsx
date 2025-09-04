@@ -24,10 +24,38 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50`}> 
+        <div className="flex min-h-screen">
+          {/* Sidebar */}
+          <aside className="w-64 bg-gray-900 text-white flex flex-col p-4 shadow-lg">
+            <div className="text-2xl font-bold mb-8 flex items-center gap-2">
+              <svg width="32" height="32" fill="none" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#232F3E"/><text x="16" y="22" textAnchor="middle" fontSize="16" fill="#fff">DGP</text></svg>
+              Portal
+            </div>
+            <nav className="flex flex-col gap-4">
+              <a href="#" className="hover:bg-gray-800 rounded px-3 py-2">Dashboard</a>
+              <a href="#" className="hover:bg-gray-800 rounded px-3 py-2">Serviços</a>
+              <a href="#" className="hover:bg-gray-800 rounded px-3 py-2">Usuários</a>
+              <a href="#" className="hover:bg-gray-800 rounded px-3 py-2">Configurações</a>
+            </nav>
+            <div className="mt-auto pt-8 text-xs text-gray-400">© 2025 DGP</div>
+          </aside>
+          {/* Main content */}
+          <div className="flex-1 flex flex-col">
+            {/* Header */}
+            <header className="h-16 bg-white border-b flex items-center px-6 justify-between shadow-sm">
+              <div className="flex items-center gap-4">
+                <input type="text" placeholder="Buscar..." className="border rounded px-3 py-1 text-sm" />
+              </div>
+              <div className="flex items-center gap-4">
+                <span className="text-gray-700 text-sm">Usuário</span>
+                <img src="https://ui-avatars.com/api/?name=User" alt="Avatar" className="w-8 h-8 rounded-full" />
+              </div>
+            </header>
+            {/* Page content */}
+            <main className="flex-1 p-8">{children}</main>
+          </div>
+        </div>
       </body>
     </html>
   );
