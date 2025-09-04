@@ -12,11 +12,16 @@ LOGDIR="$WEB_DIR/logs"
 mkdir -p "$LOGDIR"
 
 usage(){
-  echo "Usage: $0 [dev|prod]" >&2
+  echo "Usage: $0 [dev|prod] [--pm2|--systemd]" >&2
+  echo "  dev        : start dev server (nohup)"
+  echo "  prod       : build and start production server (nohup)"
+  echo "  --pm2      : (with prod) use pm2 and deploy/pm2-ecosystem.config.js"
+  echo "  --systemd  : (with prod) restart systemd unit web-portal-dgp"
   exit 2
 }
 
 MODE="${1:-dev}"
+SHIFT2="${2:-}" 
 
 echo "Deploy script starting: mode=$MODE repo=$REPO_ROOT"
 
@@ -88,9 +93,32 @@ if [ "$MODE" = "prod" ]; then
   echo "Building app..."
   npm run build
   stop_port 3000
-  echo "Starting Next in production mode (0.0.0.0:3000), logs: $LOGDIR/next-prod.log"
-  nohup env HOST=0.0.0.0 PORT=3000 npm start > "$LOGDIR/next-prod.log" 2>&1 &
-  echo "Started production server (background). Tail logs with: tail -f $LOGDIR/next-prod.log"
+  if [ "$SHIFT2" = "--pm2" ]; then
+    echo "Starting via pm2 using deploy/pm2-ecosystem.config.js"
+    if command -v pm2 >/dev/null 2>&1; then
+      pm2 start "$REPO_ROOT/deploy/pm2-ecosystem.config.js" --update-env || pm2 restart web-portal-dgp || true
+      pm2 save
+      echo "pm2 started web-portal-dgp"
+    else
+      echo "pm2 not found; install with: npm i -g pm2" >&2
+      exit 6
+    fi
+  elif [ "$SHIFT2" = "--systemd" ]; then
+    echo "Restarting systemd unit web-portal-dgp"
+    if command -v systemctl >/dev/null 2>&1; then
+      sudo systemctl daemon-reload || true
+      sudo systemctl restart web-portal-dgp
+      sudo systemctl enable web-portal-dgp || true
+      echo "systemd unit restarted"
+    else
+      echo "systemctl not available on this host" >&2
+      exit 7
+    fi
+  else
+    echo "Starting Next in production mode (0.0.0.0:3000), logs: $LOGDIR/next-prod.log"
+    nohup env HOST=0.0.0.0 PORT=3000 npm start > "$LOGDIR/next-prod.log" 2>&1 &
+    echo "Started production server (background). Tail logs with: tail -f $LOGDIR/next-prod.log"
+  fi
   exit 0
 fi
 
